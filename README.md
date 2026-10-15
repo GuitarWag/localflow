@@ -41,3 +41,25 @@ LOCALFLOW_KEY=alt_r LOCALFLOW_LANG=en ./localflow.py
 ## How it works
 
 The script records 16 kHz mono audio while the hotkey is held and transcribes it with mlx-whisper on a worker thread. It saves your clipboard, copies the transcript, sends Cmd+V, and restores the clipboard 0.3s later.
+
+## Mac app
+
+`mac/` has a menu bar version of the same tool, built with [WhisperKit](https://github.com/argmaxinc/WhisperKit). Settings pick the microphone, the hold-to-talk key (Right Control, Right Option, Right Command, Fn), the language and the model. The Python script above is unchanged.
+
+```sh
+mac/build.sh            # ad-hoc signed mac/LocalFlow.app
+open mac/LocalFlow.app
+```
+
+On first launch it asks for Microphone and Accessibility, then downloads the model (about 630 MB) to `~/Library/Application Support/LocalFlow`. The menu bar icon shows the state: download arrow while loading, filled mic while recording.
+
+An ad-hoc signed build only runs cleanly on the machine that built it. Each rebuild changes the signature, so macOS may ask for Accessibility again. To share it, sign with a Developer ID and notarize:
+
+```sh
+mac/build.sh "Developer ID Application: Your Name (TEAMID)"
+ditto -c -k --keepParent mac/LocalFlow.app LocalFlow.zip
+xcrun notarytool submit LocalFlow.zip --keychain-profile <profile> --wait
+xcrun stapler staple mac/LocalFlow.app
+```
+
+Without that, recipients have to run `xattr -dr com.apple.quarantine LocalFlow.app` before opening it.
